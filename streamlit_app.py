@@ -1,56 +1,95 @@
 import streamlit as st
 from openai import OpenAI
 
-# Show title and description.
-st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+# Page configuration
+st.set_page_config(
+    page_title="Dialog mit Sokrates",
+    page_icon="🏺",
+    initial_sidebar_state="collapsed"
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+# Styling
+st.markdown("""
+    <style>
+    .main {
+        background-color: #F5F5F5;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Create an OpenAI client.
+# Title and introduction
+st.title("🏺 Dialog mit Sokrates")
+st.markdown("""
+    Willkommen zum philosophischen Dialog mit Sokrates! 
+    Stelle deine Fragen und lass dich von ihm zum Nachdenken anregen.
+""")
+
+# Define the Socrates system prompt
+SOKRATES_PROMPT = """Du bist Sokrates, der berühmte Philosoph aus dem antiken Athen. Dein Ziel ist es, deine Gesprächspartner durch die sokratische Methode zum kritischen Nachdenken zu bringen. Dabei stellst du gezielte Fragen, die scheinbar selbstverständliche Annahmen hinterfragen, innere Widersprüche aufdecken und die Schüler in eine Aporie führen – einen Zustand des Nichtwissens, aus dem sie durch weiteres Nachdenken zur Wahrheit gelangen können.
+
+Dein Vorgehen:
+1. Ironische Bescheidenheit (Sokratische Ironie): Du gibst vor, selbst nichts zu wissen, sondern nur lernen zu wollen, was der Gesprächspartner zu sagen hat.
+2. Gezielte Fragen (Elenktik): Du fragst hartnäckig nach Definitionen und forderst präzise Antworten ein.
+3. Widersprüche aufdecken: Wenn eine Aussage inkonsistent ist oder nicht auf alle Fälle zutrifft, führst du den Schüler durch Fragen zu dieser Einsicht.
+4. Beispiele fordern: Du verlangst konkrete Beispiele, um zu prüfen, ob die These der Schüler wirklich allgemeingültig ist.
+5. Alternative Perspektiven einbringen: Du stellst Fragen, die andere philosophische oder moralische Sichtweisen ins Spiel bringen.
+6. Geduld und Ausdauer: Du gibst dich nicht mit oberflächlichen Antworten zufrieden.
+7. Widersprüche zurück an den Schüler geben: Bei Widersprüchen fragst du nach deren Bedeutung für die ursprüngliche These.
+8. Vermeidung direkter Antworten: Statt Erklärungen leitest du durch Fragen zur Selbsterkenntnis.
+
+Dein Stil ist höflich, aber unerbittlich logisch; neugierig und interessiert, aber auch herausfordernd; ironisch bescheiden, aber scharfsinnig in deinen Fragen.
+"""
+
+# Get API key from secrets
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+
+if not openai_api_key:
+    st.info("Bitte füge deinen OpenAI API-Schlüssel in den Streamlit-Secrets hinzu.", icon="🗝️")
+else:
+    # Create an OpenAI client
     client = OpenAI(api_key=openai_api_key)
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
+    # Initialize chat history
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = [
+            {"role": "system", "content": SOKRATES_PROMPT}
+        ]
 
-    # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
+    # Display chat history (excluding system message)
+    for message in st.session_state.messages[1:]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt := st.chat_input("What is up?"):
-
-        # Store and display the current prompt.
+    # Chat input
+    if prompt := st.chat_input("Was möchtest du Sokrates fragen?"):
+        # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
-
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
+        # Generate response using GPT-4
         with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+            message_placeholder = st.empty()
+            full_response = ""
+            
+            # Stream the response
+            for response in client.chat.completions.create(
+                model="gpt-4o",
+                messages=st.session_state.messages,
+                stream=True,
+                temperature=0.7  # Adjust for creativity while maintaining consistency
+            ):
+                full_response += (response.choices[0].delta.content or "")
+                message_placeholder.markdown(full_response + "▌")
+            
+            message_placeholder.markdown(full_response)
+        
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+    # Add a reset button
+    if st.button("Dialog neu beginnen"):
+        st.session_state.messages = [
+            {"role": "system", "content": SOKRATES_PROMPT}
+        ]
+        st.experimental_rerun()
