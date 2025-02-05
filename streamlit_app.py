@@ -86,7 +86,7 @@ else:
             
             # Stream the response
             for response in client.chat.completions.create(
-                model="gpt-4o",
+                model="o1-mini",
                 messages=st.session_state.messages,
                 stream=True,
                 temperature=0.7  # Adjust for creativity while maintaining consistency
