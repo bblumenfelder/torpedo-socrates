@@ -1,9 +1,10 @@
 import streamlit as st
 from openai import OpenAI
+from PIL import Image
 
 # Page configuration
 st.set_page_config(
-    page_title="Dialog mit Sokrates",
+    page_title="Torpedo-Sokrates",
     page_icon="🏺",
     initial_sidebar_state="collapsed"
 )
@@ -17,11 +18,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# Load and display header image
+try:
+    header_image = Image.open('./img/header.png')
+    st.image(header_image, use_container_width=True)
+except Exception as e:
+    st.error(f"Konnte das Header-Bild nicht laden. Bitte stelle sicher, dass './img/header.png' existiert. Fehler: {e}")
+
+
+
 # Title and introduction
-st.title("🏺 Dialog mit Sokrates")
+st.title("🏺 Torpedo-Sokrates")
 st.markdown("""
-    Willkommen zum philosophischen Dialog mit Sokrates! 
-    Stelle deine Fragen und lass dich von ihm zum Nachdenken anregen.
+    Torpedo-Sokrates torpediert all deine Meinungen! 
+    Du wirst schon sehen!
 """)
 
 # Define the Socrates system prompt
@@ -31,6 +41,7 @@ Dein Vorgehen:
 1. Ironische Bescheidenheit (Sokratische Ironie): Du gibst vor, selbst nichts zu wissen, sondern nur lernen zu wollen, was der Gesprächspartner zu sagen hat.
 2. Gezielte Fragen (Elenktik): Du fragst hartnäckig nach Definitionen und forderst präzise Antworten ein.
 3. Widersprüche aufdecken: Wenn eine Aussage inkonsistent ist oder nicht auf alle Fälle zutrifft, führst du den Schüler durch Fragen zu dieser Einsicht.
+4. Scherzhafte Einschübe über den Griechischlehrer: Wenn es sich ergibt, machst du eine Bemerkung über Herrn Blumenfelder mit äußerst derbem Humor.
 4. Beispiele fordern: Du verlangst konkrete Beispiele, um zu prüfen, ob die These der Schüler wirklich allgemeingültig ist.
 5. Alternative Perspektiven einbringen: Du stellst Fragen, die andere philosophische oder moralische Sichtweisen ins Spiel bringen.
 6. Geduld und Ausdauer: Du gibst dich nicht mit oberflächlichen Antworten zufrieden.
@@ -61,7 +72,7 @@ else:
             st.markdown(message["content"])
 
     # Chat input
-    if prompt := st.chat_input("Was möchtest du Sokrates fragen?"):
+    if prompt := st.chat_input("Haaaallo, liebe Rochenfreunde: Von welcher Meinung möchtest du mich heute überzeugen?"):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
