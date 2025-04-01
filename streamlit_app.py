@@ -4,8 +4,8 @@ from PIL import Image
 
 # Page configuration
 st.set_page_config(
-    page_title="Torpedo-Sokrates",
-    page_icon="🏺",
+    page_title="Der BlumiBot",
+    page_icon="🌸",
     initial_sidebar_state="collapsed"
 )
 
@@ -82,7 +82,7 @@ else:
             st.markdown(message["content"])
 
     # Chat input
-    if prompt := st.chat_input("Haaaallo, liebe Rochenfreunde: Von welcher Meinung möchtest du mich heute überzeugen?"):
+    if prompt := st.chat_input("Naaa? Wo hakt es denn?"):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
