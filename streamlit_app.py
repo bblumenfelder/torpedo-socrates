@@ -108,9 +108,3 @@ else:
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-    # Add a reset button
-    if st.button("Dialog neu beginnen"):
-        st.session_state.messages = [
-            {"role": "system", "content": SOKRATES_PROMPT}
-        ]
-        st.experimental_rerun()
